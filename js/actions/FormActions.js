@@ -10,6 +10,15 @@ var FormActions = {
       },
       form: form
     });
+  },
+
+  update: function (form) {
+    AppDispatcher.dispatch({
+      action: {
+        type: FormConstants.FORM_UPDATE
+      },
+      form: form
+    })
   }
   // etc.
 };

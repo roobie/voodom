@@ -4,7 +4,10 @@ var React = require('react');
 var Immutable = require('immutable');
 
 var FormStore = require('../stores/FormStore');
-var FormActions = require('../actions/FormActions')
+//var FormActions = require('../actions/FormActions');
+
+var FormDetail = require('./FormDetail.react.jsx');
+var FormListItem = require('./FormListItem.react.jsx');
 
 var getStateFromStores = function () {
   return {
@@ -16,7 +19,7 @@ var FormList = React.createClass({
 
   getInitialState: function () {
     return {
-      currentForm: Immutable.Map(),
+      selectedForm: Immutable.Map(),
       stores: getStateFromStores()
     };
   },
@@ -34,39 +37,44 @@ var FormList = React.createClass({
       <div>
 
         <div>
-          <button onClick={this._createForm} type="button">CREATE</button>
-          <input type="text"
-                 onChange={this._formDataChanged.bind(this, 'title')} />
-          <i type="button"
-                  onClick={this._clearSpecificInput.bind(this, 'title')}>
-            &times;
-          </i>
+          <FormDetail
+            form={this.state.selectedForm}
+            onFormDataChange={this._onFormDataChanged}/>
         </div>
 
-        {this.state.stores.forms.map(function (form) {
-          return (
-            <div key={form.get('id')}>
-              {form.get('id')}: {form.get('title')}
-            </div>
-          );
-        }).toArray()}
+        <div>
+          <table>
+            <thead>
+              <th>Title</th>
+            </thead>
+            <tbody>
+              {this.state.stores.forms.map((function (form) {
+                return (
+                  <FormListItem
+                    key={form.get('id')}
+                    form={form}
+                    onClick={this._selectForm.bind(this, form)} />
+                );
+              }).bind(this)).toArray()}
+            </tbody>
+          </table>
+        </div>
 
       </div>
     );
   },
 
-  _clearSpecificInput: function (fieldName, event) {
-    
+  _selectForm: function (form) {
+    this.setState({
+      selectedForm: form
+    })
   },
 
-  _formDataChanged: function (fieldName, event) {
-    this.state.currentForm = this.state.currentForm.set(fieldName,
-                                                        event.target.value);
-  },
-
-  _createForm: function () {
-    var form = this.state.currentForm;
-    FormActions.create(form);
+  _onFormDataChanged: function (fieldName, event) {
+    this.setState({
+      selectedForm: this.state.selectedForm.set(
+        fieldName, event.target.value)
+    });
   },
 
   _onChange: function () {
