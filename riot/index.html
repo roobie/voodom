@@ -1,0 +1,36 @@
+<!doctype html5>
+<html>
+<head>
+  <title>&lambda; - Voodom - RIOT</title>
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+  <link rel="icon" href="/favicon.ico" type="image/x-icon">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+</head>
+
+<body>
+
+  <todo></todo>
+
+  <script src="js/lib/riot.js"></script>
+  <script src="tags/todo.js"></script>
+
+  <script>
+  riot.mount('todo', {
+    title: 'I want to behave!',
+    items: (function () {
+      var items = [];
+
+      for(var i = 0; i < 10000; i++) {
+        items.push({
+          title: 'title()',
+        })
+      }
+
+      return items;
+    })()
+  })
+</script>
+
+</body>
+
+</html>
