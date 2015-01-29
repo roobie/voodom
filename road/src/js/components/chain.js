@@ -2,63 +2,79 @@ var m = require("mithril");
 
 var chain = {};
 
-chain.save = function(list) {
-  localStorage["chain-app.list"] = JSON.stringify(list);
+/// [ Model
+var save = function(list) {
+  var d = m.deferred();
+  setTimeout(function () {
+    d.resolve(localStorage["chain-app.list"] = JSON.stringify(list()));
+    m.redraw();
+  }, 100);
+
+  return d.promise;
 };
 
-chain.load = function() {
-  return JSON.parse(localStorage["chain-app.list"] || "[]");
+var load = function() {
+  var d = m.deferred();
+  setTimeout(function () {
+    d.resolve(JSON.parse(localStorage["chain-app.list"] || "[]"));
+    m.redraw();
+  }, 100);
+
+  return d.promise;
 };
 
-chain.today = function() {
+var today = function() {
   var now = new Date();
   return new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, -now.getTimezoneOffset(), 0, 0);
 };
 
-chain.resetDate = function() {
+var resetDate = function() {
   return localStorage["chain-app.start-date"] = chain.today().getTime();
 };
 
-chain.startDate = function() {
-  return new Date(parseInt(localStorage["chain-app.start-date"] || chain.resetDate()));
+var startDate = function() {
+  return new Date(parseInt(localStorage["chain-app.start-date"] || resetDate()));
 };
 
-chain.dateAt = function(index) {
-  var date = new Date(chain.startDate());
+var dateAt = function(index) {
+  var date = new Date(startDate());
   date.setDate(date.getDate() + index);
   return date;
 };
 
+var indexAt = function(x, y) {
+  return y * 7 + x;
+};
+/// ]
+
+/// [ Util
+var repeat = function(times, subject) {
+  var output = [];
+  for (var i = 0; i < times; i++) output.push(subject(i));
+  return output;
+};
+/// ]
+
+/// [ Controller
 chain.controller = function() {
-  var list = chain.load();
+  var list = m.prop([]);
+  load().then(list);
+
   this.isChecked = function(index) {
-    return list[index];
+    return list()[index];
   };
+
   this.check = function(index, status) {
-    if (chain.dateAt(index).getTime() >= chain.today().getTime()) {
-      list[index] = status;
-      chain.save(list);
+    if (dateAt(index).getTime() >= today().getTime()) {
+      list()[index] = status;
+      save(list);
     }
   };
 };
+/// ]
 
-chain.view = function(ctrl) {
-  var now = new Date();
-  return m("div", [ m("table", chain.seven(function(y) {
-    return m("tr", chain.seven(function(x) {
-      var index = chain.indexAt(x, y);
-      return m("td", chain.highlights(index), [ m("input[type=checkbox]", chain.checks(ctrl, index)) ]);
-    }));
-  })) ]);
-};
-
-chain.seven = function(subject) {
-  var output = [];
-  for (var i = 0; i < 7; i++) output.push(subject(i));
-  return output;
-};
-
-chain.checks = function(ctrl, index) {
+/// [ View
+var checks = function(ctrl, index) {
   return {
     onclick: function() {
       ctrl.check(index, this.checked);
@@ -67,16 +83,26 @@ chain.checks = function(ctrl, index) {
   };
 };
 
-chain.highlights = function(index) {
+var highlights = function(index) {
   return {
     style: {
-      background: chain.dateAt(index).getTime() == chain.today().getTime() ? "silver" : ""
+      background: dateAt(index).getTime() == today().getTime() ? "silver" : ""
     }
   };
 };
 
-chain.indexAt = function(x, y) {
-  return y * 7 + x;
+chain.view = function(ctrl) {
+  return m("div", [
+    m("table", repeat(7, function(y) {
+      return m("tr", repeat(7, function(x) {
+        var index = indexAt(x, y);
+        return m("td", highlights(index), [
+          m("input[type=checkbox]", checks(ctrl, index))
+        ]);
+      }));
+    }))
+  ]);
 };
+/// ]
 
 module.exports = chain;
